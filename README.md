@@ -1,59 +1,49 @@
 # 🏭 SIMI - Sistema Integrado de Monitoramento Industrial
 
-Este projeto consiste em uma solução de monitoramento de telemetria industrial desenvolvida em .NET 8. O sistema simula a coleta de dados de sensores, processa essas informações via API, armazena em banco de dados local e exibe os resultados em uma interface gráfica.
+Este repositório contém a solução completa para a Situação de Aprendizagem (SA) de monitoramento de sinais industriais. O sistema utiliza uma arquitetura distribuída para simular, processar, armazenar e visualizar dados de telemetria em tempo real.
 
-## 🚀 Requisitos Cumpridos (SA)
+## 🚀 Requisitos Implementados
 
-- **Novo Sensor Implementado:** Além da temperatura, o sistema agora monitora a **Pressão (PSI)**.
-- **Persistência em Banco de Dados:** Implementação de **SQLite** via Entity Framework Core para armazenamento permanente.
-- **Documentação Técnica:** API documentada utilizando **Swagger UI** com comentários XML detalhados.
-- **Padrão Arquitetural:** Separação de responsabilidades em 4 projetos (Shared, Api, Simulator e Interface).
+Conforme solicitado nos requisitos da avaliação, o projeto entrega:
+
+1.  **Novo Sensor Industrial**: Implementação do sinal de **Pressão (PSI)**, além da Temperatura.
+2.  **Persistência Local**: Integração com **SQLite** via Entity Framework Core para armazenamento de dados histórico.
+3.  **Documentação Profissional**: API totalmente documentada com **Swagger (OpenAPI)**, utilizando comentários XML para descrição de endpoints e modelos.
+4.  **Interface de Visualização**: Aplicação **WPF** que consome a API para exibir os logs do banco de dados ao operador.
 
 ---
 
-## 🛠️ Estrutura do Projeto
+## 🛠️ Arquitetura da Solução
 
-1.  **Shared**: Biblioteca de classes contendo o modelo `SensorData` (Contrato comum).
-2.  **ApiProcessamento**: Web API responsável pela lógica de negócio, validação de limites térmicos e persistência.
-3.  **SensorSimulator**: Aplicativo Console que simula o hardware industrial gerando dados aleatórios de temperatura e pressão.
-4.  **SensorInterface**: Aplicativo Desktop (WPF) que consome a API para exibição dos dados ao usuário final.
+O projeto está dividido em quatro camadas principais:
+
+* **`Shared`**: Biblioteca de classes contendo o modelo de dados `SensorData`, garantindo que todos os projetos utilizem o mesmo contrato.
+* **`ApiProcessamento`**: O núcleo do sistema. Recebe os dados, aplica regras de negócio (limite de temperatura) e persiste as informações no SQLite.
+* **`SensorSimulator`**: Aplicação de consola que emula um hardware industrial, enviando pacotes JSON com Temperatura e Pressão para a API.
+* **`SensorInterface`**: Interface gráfica (WPF) que permite ao utilizador visualizar o histórico de dados armazenados no banco.
 
 ---
 
 ## 📋 Documentação da API (Endpoints)
 
-A API utiliza o Swagger para documentação interativa. Os principais endpoints são:
+A API foi configurada para gerar documentação automática via Swagger, acessível pela rota `/swagger`.
+
+### Endpoints Principais:
 
 * **`POST /api/v1/sensores`**
-    * **Descrição**: Recebe e valida os dados de telemetria.
-    * **Regra de Negócio**: Se a temperatura exceder o limite definido no arquivo de configuração, a API retorna `400 Bad Request`.
-    * **Persistência**: Dados válidos são gravados automaticamente no arquivo `sensores.db`.
+    * **Função**: Recebe telemetria do simulador.
+    * **Regra**: Se a temperatura ultrapassar o limite configurado no `ApiConfig`, a API rejeita o dado com erro `400 Bad Request`.
+    * **Persistência**: Grava o ID, Temperatura, Pressão e Timestamp no ficheiro `sensores.db`.
+    
 * **`GET /api/v1/sensores`**
-    * **Descrição**: Recupera o histórico completo de leituras do banco de dados para alimentar a interface WPF.
+    * **Função**: Retorna a lista completa de leituras armazenadas.
+    * **Uso**: Utilizado pela interface WPF para popular o histórico de monitoramento.
 
 ---
 
-## 🔧 Como Executar o Projeto
+## 🔧 Como Executar
 
-Siga estes passos para rodar a aplicação localmente:
-
-1.  **Preparar o Banco de Dados**:
-    * Abra o **Console do Gerenciador de Pacotes** no Visual Studio.
-    * Selecione o projeto `ApiProcessamento` como projeto padrão.
-    * Execute o comando:  
-        `Update-Database`
-2.  **Iniciar a Solução**:
-    * Clique com o botão direito na **Solução** > **Configurar Projetos de Inicialização**.
-    * Selecione **Vários projetos de inicialização**.
-    * Defina como "Iniciar": `ApiProcessamento`, `SensorSimulator` e `SensorInterface`.
-3.  **Acessar a Documentação**:
-    * Ao rodar a API, o navegador abrirá automaticamente em `/swagger/index.html`.
-
----
-
-## 📦 Tecnologias Utilizadas
-- .NET 8 (C#)
-- Entity Framework Core (EF Core)
-- SQLite
-- Swagger / OpenAPI
-- WPF (Windows Presentation Foundation)
+### 1. Preparação do Banco de Dados
+Para criar o banco de dados SQLite localmente, execute o seguinte comando no **Consola do Gestor de Pacotes** (selecionando `ApiProcessamento` como projeto padrão):
+```powershell
+Update-Database
