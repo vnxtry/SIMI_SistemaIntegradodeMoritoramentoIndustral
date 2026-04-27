@@ -1,9 +1,9 @@
-﻿using ApiProcessamento.Config;
-using ApiProcessamento.Data;
+﻿using ApiProcessamento.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Shared;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace ApiProcessamento.Controllers
 {
@@ -15,13 +15,64 @@ namespace ApiProcessamento.Controllers
     public class SensorController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IOptions<ApiConfig> _config;
 
-        public SensorController(AppDbContext context, IOptions<ApiConfig> config)
+        public SensorController(AppDbContext context)
         {
             _context = context;
-            _config = config;
         }
+
+        // =======================================================
+        // NOVOS ENDPOINTS PARA O DESAFIO (CONFIGURAÇÃO)
+        // =======================================================
+
+        /// <summary>
+        /// Recupera a temperatura máxima permitida salva no banco de dados SQLite.
+        /// </summary>
+        /// <returns>O objeto de configuração contendo o limite de temperatura.</returns>
+        /// <response code="200">Retorna a configuração atual com sucesso.</response>
+        [HttpGet("configuracao")]
+        [ProducesResponseType(typeof(Configuracao), 200)]
+        public async Task<IActionResult> ObterConfiguracao()
+        {
+            var config = await _context.Configuracoes.FirstOrDefaultAsync();
+            if (config == null)
+            {
+                // Retorna um valor padrão seguro caso o WPF ainda não tenha salvo nada
+                return Ok(new Configuracao { TemperaturaMaxima = 30.0 });
+            }
+            return Ok(config);
+        }
+
+        /// <summary>
+        /// Atualiza ou insere o limite de temperatura máxima no banco de dados SQLite.
+        /// </summary>
+        /// <param name="novaTemperaturaMaxima">O novo valor de limite térmico.</param>
+        /// <returns>O objeto de configuração atualizado.</returns>
+        /// <response code="200">Retorna a configuração atualizada com sucesso.</response>
+        [HttpPost("configuracao")]
+        [ProducesResponseType(typeof(Configuracao), 200)]
+        public async Task<IActionResult> SalvarConfiguracao([FromBody] double novaTemperaturaMaxima)
+        {
+            var config = await _context.Configuracoes.FirstOrDefaultAsync();
+
+            if (config == null)
+            {
+                config = new Configuracao { TemperaturaMaxima = novaTemperaturaMaxima };
+                _context.Configuracoes.Add(config);
+            }
+            else
+            {
+                config.TemperaturaMaxima = novaTemperaturaMaxima;
+                _context.Configuracoes.Update(config);
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(config);
+        }
+
+        // =======================================================
+        // ENDPOINTS ORIGINAIS
+        // =======================================================
 
         /// <summary>
         /// Recebe uma nova leitura de sensor, valida os limites térmicos e persiste no banco SQLite.
@@ -39,16 +90,20 @@ namespace ApiProcessamento.Controllers
         /// <param name="sensor">Objeto contendo os dados de telemetria do sensor.</param>
         /// <returns>O objeto recém-criado com seu ID gerado pelo banco de dados.</returns>
         /// <response code="201">Retorna o item criado e confirma a persistência.</response>
-        /// <response code="400">Se a temperatura ultrapassar o limite definido no ApiConfig.</response>
+        /// <response code="400">Se a temperatura ultrapassar o limite definido no banco de dados.</response>
         [HttpPost]
         [ProducesResponseType(typeof(SensorData), 201)]
         [ProducesResponseType(400)]
         public async Task<IActionResult> Receber(SensorData sensor)
         {
-            // Validação baseada no ApiConfig (launchSettings/appsettings)
-            if (sensor.Temperatura > _config.Value.MaxTemperatura)
+            // 1. Busca a regra de negócio direto do banco
+            var config = await _context.Configuracoes.FirstOrDefaultAsync();
+            double limiteTemperatura = config != null ? config.TemperaturaMaxima : 30.0;
+
+            // 2. Valida contra o limite dinâmico
+            if (sensor.Temperatura > limiteTemperatura)
             {
-                return BadRequest($"Alerta Crítico: Temperatura ({sensor.Temperatura}ºC) acima do limite permitido.");
+                return BadRequest($"Alerta Crítico: Temperatura ({sensor.Temperatura}ºC) acima do limite permitido de {limiteTemperatura}ºC.");
             }
 
             // O Banco gera o ID automaticamente

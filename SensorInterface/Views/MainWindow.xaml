@@ -5,15 +5,36 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SensorInterface"
         mc:Ignorable="d"
-        Title="SIMI - Sistema Integrado de Monitoramento Industrial" Height="450" Width="800">
-    <StackPanel>
-        <Button Content="Atualizar Dados do SQLite"
-                Margin="10"
-                Padding="5"
-                Command="{Binding CarregarSensoresCommand}"/>
+        Title="SIMI - Sistema Integrado de Monitoramento Industrial" Height="500" Width="800">
 
-        <ListBox Margin="10"
-                 Height="350"
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <GroupBox Grid.Row="0" Header="⚙️ Configuração do Sistema (Limites de Alerta)" Margin="0,0,0,10" Padding="10">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Temperatura Máxima Permitida:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,10,0"/>
+
+                <TextBox Text="{Binding TemperaturaMaxima, UpdateSourceTrigger=PropertyChanged}" 
+                         Width="80" Height="25" Margin="0,0,5,0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="14" FontWeight="Bold"/>
+                <TextBlock Text="ºC" VerticalAlignment="Center" Margin="0,0,15,0"/>
+
+                <Button Content="💾 Salvar no Banco" 
+                        Command="{Binding SalvarConfiguracaoCommand}" 
+                        Padding="15,5" Background="#E1F0FF" FontWeight="Bold"/>
+            </StackPanel>
+        </GroupBox>
+
+        <Button Grid.Row="1" Content="🔄 Atualizar Dados do SQLite"
+                Margin="0,0,0,10"
+                Padding="8"
+                Command="{Binding CarregarSensoresCommand}"
+                FontWeight="Bold"/>
+
+        <ListBox Grid.Row="2"
                  ItemsSource="{Binding ListaSensores}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -34,5 +55,5 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-    </StackPanel>
+    </Grid>
 </Window>

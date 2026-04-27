@@ -17,6 +17,20 @@ namespace ApiProcessamento.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.12");
 
+            modelBuilder.Entity("ApiProcessamento.Data.Configuracao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("TemperaturaMaxima")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Configuracoes");
+                });
+
             modelBuilder.Entity("Shared.SensorData", b =>
                 {
                     b.Property<int>("Id")
